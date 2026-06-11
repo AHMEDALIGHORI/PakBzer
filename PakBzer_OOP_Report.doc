@@ -1,0 +1,329 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8"/>
+<title>PakBzer OOP Project Report</title>
+<!--[if gte mso 9]>
+<xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml>
+<![endif]-->
+<style>
+  @page { size: A4; margin: 2.2cm; }
+  body { font-family: "Calibri", "Segoe UI", sans-serif; font-size: 11.5pt; color: #1a1a1a; line-height: 1.5; }
+  h1 { font-size: 26pt; color: #01411C; text-align: center; margin-bottom: 2pt; }
+  h2 { font-size: 17pt; color: #01411C; border-bottom: 2px solid #046A38; padding-bottom: 3pt; margin-top: 22pt; }
+  h3 { font-size: 13.5pt; color: #046A38; margin-top: 16pt; }
+  .subtitle { text-align: center; color: #555; font-size: 12pt; margin-top: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
+  th, td { border: 1px solid #b9c7bd; padding: 5pt 8pt; font-size: 10.5pt; text-align: left; vertical-align: top; }
+  th { background: #046A38; color: #fff; }
+  tr:nth-child(even) td { background: #f1f6f2; }
+  pre { background: #0f1f17; color: #e8f5ec; padding: 10pt; font-family: "Consolas", monospace;
+        font-size: 9.5pt; white-space: pre-wrap; border-radius: 4px; }
+  code { font-family: "Consolas", monospace; background: #eef3ef; padding: 1pt 3pt; }
+  blockquote { border-left: 4px solid #046A38; margin: 8pt 0; padding: 4pt 12pt; background: #f1f6f2; color: #333; }
+  .cover { text-align: center; margin-top: 40pt; }
+  .cover p { font-size: 12pt; }
+  .pillar { font-weight: bold; color: #01411C; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+<h1>PakBzer</h1>
+<p class="subtitle">A Pakistani E-Commerce Web Application</p>
+<p class="subtitle"><b>Object-Oriented Programming Project Report</b></p>
+<br/>
+<p><b>Language:</b> Java 17 &nbsp;|&nbsp; <b>Framework:</b> Spring Boot 3 &nbsp;|&nbsp; <b>Paradigm:</b> Object-Oriented Programming</p>
+</div>
+
+<br/>
+
+<h2>1. Abstract</h2>
+<p>PakBzer is a full-stack online clothing store for the Pakistani market. It lets users browse five
+category sections (Men, Women, Kids, Boy, Adult), search products, add items to a cart, register and
+log in (including Google OAuth2), write reviews with star ratings, and pay through Stripe Checkout.</p>
+<p>The purpose of the project is to demonstrate the four pillars of <b>Object-Oriented Programming
+(OOP)</b> &mdash; <i>Encapsulation, Inheritance, Abstraction, and Polymorphism</i> &mdash; together with
+supporting relationships such as <i>composition</i> and <i>association</i>, inside a realistic, layered
+application.</p>
+
+<h2>2. System Architecture</h2>
+<p>PakBzer follows a classic <b>layered (n-tier) architecture</b>. Each layer has a single
+responsibility and talks only to the layer directly beneath it.</p>
+<pre>
+   Browser (HTML / Bootstrap)
+        |  HTTP request
+        v
+ +------------------+   Controllers (com.pakbzer.controller)
+ |  Presentation    |   - receive requests, return Thymeleaf views
+ +--------+---------+
+          v
+ +------------------+   Services (com.pakbzer.service)
+ |  Business Logic  |   - cart rules, registration, reviews, Stripe
+ +--------+---------+
+          v
+ +------------------+   Repositories (com.pakbzer.repository)
+ |  Data Access     |   - Spring Data JPA
+ +--------+---------+
+          v
+ +------------------+   Entities (com.pakbzer.model) &lt;-&gt; H2 Database
+ |  Domain Model    |
+ +------------------+
+</pre>
+
+<table>
+<tr><th>Package</th><th>Responsibility</th></tr>
+<tr><td>model</td><td>Domain objects (entities) &mdash; the heart of the OOP design</td></tr>
+<tr><td>repository</td><td>Database access via Spring Data JPA interfaces</td></tr>
+<tr><td>service</td><td>Business logic and rules</td></tr>
+<tr><td>controller</td><td>Handle web requests, choose which page to show</td></tr>
+<tr><td>security</td><td>Authentication, authorization, OAuth2</td></tr>
+<tr><td>config</td><td>Configuration and initial data seeding</td></tr>
+</table>
+
+<h2>3. The Four Pillars of OOP in PakBzer</h2>
+
+<h3>3.1 Encapsulation</h3>
+<p><b>Definition:</b> Bundling data (fields) and the methods that operate on them inside a class, and
+hiding internal state behind <code>private</code> fields exposed only through controlled accessors.</p>
+<p><b>In the code:</b> Every entity keeps its fields <code>private</code>. More importantly, business
+rules are encapsulated as methods so callers cannot corrupt the state.</p>
+<pre>
+// Product.java - the average rating is computed INSIDE the object.
+private List&lt;Review&gt; reviews = new ArrayList&lt;&gt;();
+
+public double getAverageRating() {
+    if (reviews == null || reviews.isEmpty()) {
+        return 0.0;
+    }
+    return reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
+}
+
+public boolean isInStock() {
+    return stock &gt; 0;
+}
+</pre>
+<pre>
+// CartItem.java - the line total is derived, never stored or set from outside.
+public BigDecimal getLineTotal() {
+    return unitPrice.multiply(BigDecimal.valueOf(quantity));
+}
+</pre>
+<p>The outside world never calculates a rating or a line total itself &mdash; it <i>asks the object</i>.
+Data and behaviour live together, and the internals are protected.</p>
+
+<h3>3.2 Inheritance</h3>
+<p><b>Definition:</b> A subclass acquires fields and behaviour from a superclass, promoting code reuse.</p>
+<p><b>In the code:</b> Every persistent entity inherits identity and audit fields from the abstract
+<code>BaseEntity</code>, so that code is written <b>once</b> and reused by <code>Product</code>,
+<code>User</code>, and <code>Review</code>.</p>
+<pre>
+// BaseEntity.java  (superclass)
+@MappedSuperclass
+public abstract class BaseEntity {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @PrePersist protected void onCreate() { createdAt = updatedAt = LocalDateTime.now(); }
+    @PreUpdate  protected void onUpdate() { updatedAt = LocalDateTime.now(); }
+}
+</pre>
+<pre>
+// Subclasses reuse everything above:
+public class Product extends BaseEntity { ... }
+public class User    extends BaseEntity { ... }
+public class Review  extends BaseEntity { ... }
+</pre>
+
+<h3>3.3 Abstraction</h3>
+<p><b>Definition:</b> Exposing <i>what</i> an object does while hiding <i>how</i> it does it, using
+abstract classes and interfaces.</p>
+<p>Two forms are used: an <b>abstract class</b> (<code>BaseEntity</code>, which can never be
+instantiated directly) and an <b>interface</b> (<code>ProductService</code>, the catalogue contract).</p>
+<pre>
+// ProductService.java - the abstraction (the "what")
+public interface ProductService {
+    List&lt;Product&gt; findAll();
+    Optional&lt;Product&gt; findById(Long id);
+    List&lt;Product&gt; findByCategory(Category category);
+    List&lt;Product&gt; search(String query);
+    Product save(Product product);
+}
+</pre>
+<p>Controllers declare <code>private final ProductService productService;</code> and never know
+<i>how</i> products are fetched &mdash; that detail is hidden behind the interface.</p>
+
+<h3>3.4 Polymorphism</h3>
+<p><b>Definition:</b> One interface/reference taking many forms; the method that runs is decided by
+the real object type at runtime.</p>
+<p><b>(a) Interface polymorphism</b> &mdash; <code>ProductServiceImpl</code> <i>is-a</i>
+<code>ProductService</code>:</p>
+<pre>
+// ProductServiceImpl.java
+@Service
+public class ProductServiceImpl implements ProductService {
+    @Override public List&lt;Product&gt; search(String query) {
+        if (query == null || query.isBlank()) return Collections.emptyList();
+        String q = query.trim();
+        return productRepository
+            .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseOrBrandContainingIgnoreCase(q, q, q);
+    }
+}
+</pre>
+<p>A future <code>CachedProductServiceImpl</code> could replace it without changing any controller.</p>
+<p><b>(b) Method overriding</b> &mdash; we extend Spring's <code>OidcUserService</code> and override
+<code>loadUser</code> to auto-create a PakBzer account on first Google login:</p>
+<pre>
+// CustomOidcUserService.java
+public class CustomOidcUserService extends OidcUserService {
+    @Override
+    public OidcUser loadUser(OidcUserRequest req) throws OAuth2AuthenticationException {
+        OidcUser oidcUser = super.loadUser(req);          // call the parent version
+        userService.findOrCreateGoogleUser(oidcUser.getEmail(), oidcUser.getFullName());
+        return oidcUser;
+    }
+}
+</pre>
+
+<h2>4. Supporting OOP Relationships</h2>
+
+<h3>4.1 Composition / Aggregation</h3>
+<p>The <code>Cart</code> is composed of many <code>CartItem</code> objects and owns all cart logic:</p>
+<pre>
+// Cart.java (session-scoped) - "HAS-A" relationship
+private final List&lt;CartItem&gt; items = new ArrayList&lt;&gt;();
+
+public synchronized void add(Product product, int quantity) {
+    for (CartItem item : items) {
+        if (item.getProductId().equals(product.getId())) {  // already in cart?
+            item.increaseQuantity(quantity);
+            return;
+        }
+    }
+    items.add(new CartItem(product.getId(), product.getName(),
+                           product.getImageUrl(), product.getPrice(), quantity));
+}
+
+public BigDecimal getTotalPrice() {
+    return items.stream().map(CartItem::getLineTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+}
+</pre>
+
+<h3>4.2 Association (one-to-many)</h3>
+<p>A <code>Product</code> is associated with many <code>Review</code>s:</p>
+<pre>
+// Product.java
+@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+private List&lt;Review&gt; reviews = new ArrayList&lt;&gt;();
+
+// Review.java
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "product_id")
+private Product product;
+</pre>
+
+<h3>4.3 Enumerations</h3>
+<p><code>Category</code> is an enum where each constant carries its own data and behaviour:</p>
+<pre>
+public enum Category {
+    MEN("Men", "Men's Shalwar Kameez...", "https://...men.jpg"),
+    WOMEN("Women", "Lawn Suits, Sarees...", "https://...women.jpg");
+    private final String displayName, description, heroImage;
+    Category(String d, String desc, String img) { ... }
+    public String getDisplayName() { return displayName; }
+}
+</pre>
+
+<h2>5. File-by-File Explanation of the Java Code</h2>
+
+<h3>model/ &mdash; Domain Layer</h3>
+<table>
+<tr><th>File</th><th>What it does</th></tr>
+<tr><td>BaseEntity.java</td><td>Abstract superclass with id + timestamps. Root of the inheritance hierarchy.</td></tr>
+<tr><td>Product.java</td><td>A product for sale. Encapsulates getAverageRating(), getReviewCount(), isInStock(). Owns Reviews.</td></tr>
+<tr><td>User.java</td><td>Registered customer: email, name, BCrypt password (null for Google), Role, provider.</td></tr>
+<tr><td>Review.java</td><td>A 1-5 star review linked to a Product.</td></tr>
+<tr><td>CartItem.java</td><td>One cart line; computes its own getLineTotal().</td></tr>
+<tr><td>Category.java</td><td>Enum of the five store sections with display name, description, hero image.</td></tr>
+<tr><td>Role.java</td><td>Enum of user roles: USER, ADMIN.</td></tr>
+</table>
+
+<h3>repository/ &mdash; Data Access Layer</h3>
+<table>
+<tr><th>File</th><th>What it does</th></tr>
+<tr><td>ProductRepository</td><td>findByCategory(...) and a search across name/description/brand.</td></tr>
+<tr><td>UserRepository</td><td>findByEmail(...), existsByEmail(...).</td></tr>
+<tr><td>ReviewRepository</td><td>findByProductIdOrderByCreatedAtDesc(...).</td></tr>
+</table>
+
+<h3>service/ &mdash; Business Logic Layer</h3>
+<table>
+<tr><th>File</th><th>What it does</th></tr>
+<tr><td>ProductService (interface)</td><td>Abstraction for catalogue operations.</td></tr>
+<tr><td>ProductServiceImpl</td><td>Concrete implementation; validates query, delegates to repository.</td></tr>
+<tr><td>UserService</td><td>register(...) (rejects duplicate emails, hashes password) and findOrCreateGoogleUser(...).</td></tr>
+<tr><td>ReviewService</td><td>Adds reviews, clamps rating to 1-5, links to product.</td></tr>
+<tr><td>Cart</td><td>Session-scoped cart; encapsulates add/update/remove/total logic.</td></tr>
+<tr><td>StripeService</td><td>Builds a Stripe Checkout session from the cart.</td></tr>
+</table>
+
+<h3>controller/ &mdash; Presentation Layer</h3>
+<table>
+<tr><th>File</th><th>Routes</th><th>What it does</th></tr>
+<tr><td>HomeController</td><td>/, /search</td><td>Home page (preview per category) and search results.</td></tr>
+<tr><td>ProductController</td><td>/category/{c}, /product/{id}</td><td>Lists products by category, product detail + reviews.</td></tr>
+<tr><td>CartController</td><td>/cart, /cart/add, /update, /remove</td><td>Cart operations.</td></tr>
+<tr><td>ReviewController</td><td>/review/add</td><td>Saves a new review (author = logged-in user).</td></tr>
+<tr><td>AuthController</td><td>/login, /register</td><td>Shows forms and registers new accounts.</td></tr>
+<tr><td>CheckoutController</td><td>/checkout, /checkout/success</td><td>Starts Stripe / demo checkout, clears cart.</td></tr>
+<tr><td>GlobalControllerAdvice</td><td>(all pages)</td><td>Injects categories and live cart count into every view.</td></tr>
+</table>
+
+<h3>security/ &mdash; Security Layer</h3>
+<table>
+<tr><th>File</th><th>What it does</th></tr>
+<tr><td>SecurityConfig</td><td>Public vs protected URLs, form login, Google OAuth2 login, logout.</td></tr>
+<tr><td>CustomUserDetailsService</td><td>Loads a local user by email for password login.</td></tr>
+<tr><td>CustomOidcUserService</td><td>Overrides Google login to provision a PakBzer account on first sign-in.</td></tr>
+</table>
+
+<h3>config/ &mdash; Configuration Layer</h3>
+<table>
+<tr><th>File</th><th>What it does</th></tr>
+<tr><td>PasswordConfig</td><td>Provides the BCryptPasswordEncoder bean (separate, to avoid a dependency cycle).</td></tr>
+<tr><td>StripeProperties</td><td>Binds stripe.* settings from application.properties.</td></tr>
+<tr><td>DataSeeder</td><td>On first run, seeds ~50 Pakistani products (10 per category) with images and sample reviews.</td></tr>
+</table>
+
+<h2>6. How a Key Feature Works End-to-End &mdash; "Add to Cart"</h2>
+<pre>
+1. User clicks "Add to Cart" on a product card  (Thymeleaf form -&gt; POST /cart/add)
+2. CartController.add(productId, quantity)        &lt;- Presentation layer
+3.   -&gt; ProductService.findById(productId)         &lt;- Business layer (interface, polymorphic)
+4.       -&gt; ProductRepository.findById(...)        &lt;- Data layer (Spring Data JPA)
+5.   -&gt; cart.add(product, quantity)                &lt;- Cart encapsulates the rule:
+        if product already in cart -&gt; increase qty, else -&gt; add new CartItem
+6. Redirect to /cart, which renders the total via cart.getTotalPrice()
+</pre>
+<p>Each layer only calls the next one, and the rules (merge duplicates, compute total) live inside the
+<code>Cart</code> object &mdash; encapsulation in action.</p>
+
+<h2>7. Conclusion</h2>
+<p>PakBzer shows that OOP is not just theory &mdash; each pillar solves a real problem:</p>
+<ul>
+<li><span class="pillar">Encapsulation</span> keeps business rules (ratings, totals, cart merging) safe inside objects.</li>
+<li><span class="pillar">Inheritance</span> removes duplication via the shared <code>BaseEntity</code>.</li>
+<li><span class="pillar">Abstraction</span> (interfaces + abstract classes) lets layers depend on contracts, not details.</li>
+<li><span class="pillar">Polymorphism</span> makes the system extensible and lets us override framework behaviour cleanly.</li>
+</ul>
+<p>Together with composition and association, these principles produce a codebase that is modular,
+reusable, testable, and easy to extend.</p>
+
+<br/><hr/>
+<p style="text-align:center; color:#777; font-size:10pt;">PakBzer &mdash; OOP Project Report &mdash; Made in Pakistan</p>
+
+</body>
+</html>

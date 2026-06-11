@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Home')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<!-- HERO -->
+<header class="pakbzer-hero text-light">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h1 class="display-4 fw-bold">Pakistan's Favourite <span class="brand-accent">Online Store</span></h1>
+                <p class="lead">From traditional shalwar kameez to modern fashion — for Men, Women, Kids & more.
+                    Shop authentic Pakistani brands and pay securely.</p>
+                <a th:href="@{/category/women}" class="btn btn-warning btn-lg text-dark fw-semibold">
+                    <i class="bi bi-bag"></i> Start Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container mt-4">
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+</div>
+
+<!-- CATEGORY TILES -->
+<section class="container my-5">
+    <h2 class="section-title text-center mb-4">Shop by Category</h2>
+    <div class="row g-3">
+        <div class="col-6 col-md-4 col-lg" th:each="cat : ${navCategories}">
+            <a th:href="@{'/category/' + ${cat.name().toLowerCase()}}" class="category-tile">
+                <img th:src="${cat.heroImage}" th:alt="${cat.displayName}"
+                     onerror="this.onerror=null;this.src='https://placehold.co/800x400/046A38/ffffff?text=' + this.alt;"/>
+                <span class="category-tile-label" th:text="${cat.displayName}">Category</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- PRODUCT SECTIONS PER CATEGORY -->
+<section class="container my-5" th:each="entry : ${sections}">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+            <h3 class="section-title mb-0" th:text="${entry.key.displayName}">Category</h3>
+            <small class="text-muted" th:text="${entry.key.description}">desc</small>
+        </div>
+        <a class="btn btn-outline-success btn-sm" th:href="@{'/category/' + ${entry.key.name().toLowerCase()}}">
+            View all <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="row g-3">
+        <th:block th:each="product : ${entry.value}">
+            <div th:replace="~{fragments/components :: productCard(${product})}"></div>
+        </th:block>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

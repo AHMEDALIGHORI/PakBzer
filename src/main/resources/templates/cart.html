@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Your Cart')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container my-4">
+    <h2 class="section-title mb-3">Your Shopping Cart</h2>
+
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div th:if="${cart.empty}" class="text-center py-5">
+        <i class="bi bi-cart-x display-1 text-muted"></i>
+        <p class="lead mt-3">Your cart is empty.</p>
+        <a th:href="@{/}" class="btn btn-success">Continue Shopping</a>
+    </div>
+
+    <div th:unless="${cart.empty}" class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-3" th:each="item : ${cart.items}">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <img th:src="${item.imageUrl}" class="cart-thumb rounded" th:alt="${item.name}"/>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1" th:text="${item.name}">Item</h6>
+                        <small class="text-muted">Rs. <span th:text="${#numbers.formatInteger(item.unitPrice,1,'COMMA')}">0</span> each</small>
+                    </div>
+                    <form th:action="@{/cart/update}" method="post" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="productId" th:value="${item.productId}"/>
+                        <input type="number" name="quantity" th:value="${item.quantity}" min="0"
+                               class="form-control form-control-sm" style="width:75px"/>
+                        <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-arrow-repeat"></i></button>
+                    </form>
+                    <div class="fw-bold text-success text-end" style="width:110px">
+                        Rs. <span th:text="${#numbers.formatInteger(item.lineTotal,1,'COMMA')}">0</span>
+                    </div>
+                    <form th:action="@{/cart/remove}" method="post">
+                        <input type="hidden" name="productId" th:value="${item.productId}"/>
+                        <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Order Summary</h5>
+                    <div class="d-flex justify-content-between">
+                        <span>Items</span><span th:text="${cart.totalItems}">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between fs-5 fw-bold text-success mt-2">
+                        <span>Total</span>
+                        <span>Rs. <span th:text="${#numbers.formatInteger(cart.totalPrice,1,'COMMA')}">0</span></span>
+                    </div>
+                    <hr/>
+
+                    <div sec:authorize="!isAuthenticated()" class="alert alert-warning small">
+                        Please <a th:href="@{/login}">sign in</a> to checkout.
+                    </div>
+
+                    <form sec:authorize="isAuthenticated()" th:action="@{/checkout}" method="post">
+                        <button type="submit" class="btn btn-success w-100 btn-lg">
+                            <i class="bi bi-credit-card"></i> Checkout with Stripe
+                        </button>
+                    </form>
+                    <a th:href="@{/}" class="btn btn-outline-secondary w-100 mt-2">Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${product.name})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container my-4">
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+            <li class="breadcrumb-item">
+                <a th:href="@{'/category/' + ${product.category.name().toLowerCase()}}"
+                   th:text="${product.category.displayName}">Category</a>
+            </li>
+            <li class="breadcrumb-item active" th:text="${product.name}">Product</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <img th:src="${product.imageUrl}" class="img-fluid rounded shadow-sm w-100" th:alt="${product.name}"
+                 onerror="this.onerror=null;this.src='https://placehold.co/600x700/01411C/ffffff?text=PakBzer';"/>
+        </div>
+        <div class="col-md-6">
+            <span class="badge bg-success-subtle text-success mb-2" th:text="${product.brand}">Brand</span>
+            <h1 class="h3" th:text="${product.name}">Product</h1>
+
+            <div class="text-warning mb-2" th:with="avg=${product.averageRating}">
+                <i class="bi" th:each="i : ${#numbers.sequence(1,5)}"
+                   th:classappend="${i <= avg} ? 'bi-star-fill' : 'bi-star'"></i>
+                <span class="text-muted small"
+                      th:text="${#numbers.formatDecimal(avg,1,1)} + ' / 5 (' + ${product.reviewCount} + ' reviews)'">0</span>
+            </div>
+
+            <h2 class="text-success">Rs. <span th:text="${#numbers.formatInteger(product.price, 1, 'COMMA')}">0</span></h2>
+            <p class="text-muted" th:text="${product.description}">Description</p>
+
+            <p>
+                <span th:if="${product.inStock}" class="badge bg-success">In Stock</span>
+                <span th:unless="${product.inStock}" class="badge bg-danger">Out of Stock</span>
+            </p>
+
+            <form th:action="@{/cart/add}" method="post" class="row g-2 align-items-center mt-2" th:if="${product.inStock}">
+                <input type="hidden" name="productId" th:value="${product.id}"/>
+                <div class="col-auto">
+                    <input type="number" name="quantity" value="1" min="1" class="form-control" style="width:90px"/>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- REVIEWS -->
+    <hr class="my-5"/>
+    <h3 class="section-title">Customer Reviews</h3>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div th:if="${#lists.isEmpty(reviews)}" class="alert alert-light border">
+                No reviews yet. Be the first to review this product!
+            </div>
+            <div class="card mb-3 border-0 shadow-sm" th:each="review : ${reviews}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <strong th:text="${review.authorName}">Author</strong>
+                        <span class="text-warning">
+                            <i class="bi" th:each="i : ${#numbers.sequence(1,5)}"
+                               th:classappend="${i <= review.rating} ? 'bi-star-fill' : 'bi-star'"></i>
+                        </span>
+                    </div>
+                    <p class="mb-0 mt-2" th:text="${review.comment}">Comment</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Write a Review</h5>
+
+                    <div sec:authorize="!isAuthenticated()" class="alert alert-warning small">
+                        Please <a th:href="@{/login}">sign in</a> to write a review.
+                    </div>
+
+                    <form sec:authorize="isAuthenticated()" th:action="@{/review/add}" method="post">
+                        <input type="hidden" name="productId" th:value="${product.id}"/>
+                        <div class="mb-2">
+                            <label class="form-label">Rating</label>
+                            <select name="rating" class="form-select">
+                                <option value="5">5 - Excellent</option>
+                                <option value="4">4 - Very Good</option>
+                                <option value="3">3 - Good</option>
+                                <option value="2">2 - Fair</option>
+                                <option value="1">1 - Poor</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Your Review</label>
+                            <textarea name="comment" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Submit Review</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

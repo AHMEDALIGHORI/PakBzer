@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Order Confirmed')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container my-5 text-center">
+    <i class="bi bi-check-circle-fill text-success" style="font-size:5rem"></i>
+    <h2 class="mt-3">Thank you for your order!</h2>
+
+    <div th:if="${demo}" class="alert alert-info d-inline-block mt-2">
+        This was a <strong>demo checkout</strong> (no Stripe keys configured, so no real payment was taken).
+    </div>
+    <div th:unless="${demo}" class="alert alert-success d-inline-block mt-2">
+        Your payment was processed securely via Stripe.
+    </div>
+
+    <p class="lead">Your order will be delivered across Pakistan soon.</p>
+    <a th:href="@{/}" class="btn btn-success btn-lg mt-2">Continue Shopping</a>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
