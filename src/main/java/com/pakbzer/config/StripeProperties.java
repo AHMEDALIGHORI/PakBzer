@@ -36,6 +36,18 @@ public class StripeProperties {
     }
 
     public boolean isConfigured() {
-        return secretKey != null && secretKey.startsWith("sk_") && !secretKey.contains("PASTE");
+        return looksLikeRealKey(secretKey, "sk_") && looksLikeRealKey(publishableKey, "pk_");
+    }
+
+    private boolean looksLikeRealKey(String key, String prefix) {
+        if (key == null) {
+            return false;
+        }
+        String normalized = key.trim();
+        if (!normalized.startsWith(prefix)) {
+            return false;
+        }
+        String lower = normalized.toLowerCase();
+        return !lower.contains("your_") && !lower.contains("paste") && !lower.contains("example");
     }
 }

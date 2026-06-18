@@ -102,7 +102,7 @@ Open 👉 **http://localhost:8080**
 H2 console: **http://localhost:8080/h2-console** (JDBC URL `jdbc:h2:file:./data/pakbzer`, user `sa`, no password).
 
 ### 🔑 Configure your keys
-Edit `src/main/resources/application.properties` (or set env vars):
+Edit `src/main/resources/application.properties` for local development, or set the environment variables listed in `env.example`:
 
 ```properties
 # Stripe
@@ -114,6 +114,32 @@ spring.security.oauth2.client.registration.google.client-id=YOUR_CLIENT_ID
 spring.security.oauth2.client.registration.google.client-secret=YOUR_CLIENT_SECRET
 ```
 > 💡 No Stripe key? Checkout runs in **demo mode** (order confirmed, no real charge). Test card: `4242 4242 4242 4242`.
+
+## 🌐 Deployment
+
+PakBzer is a **single Spring Boot application**. The frontend is rendered by Thymeleaf inside the same backend, so you do **not** need a separate frontend deployment.
+
+### Recommended deployment shape
+- Deploy the whole app to a Java-capable host such as Render, Railway, Fly.io, or Google Cloud Run.
+- Set environment variables for Google OAuth2, Stripe, and the public base URL.
+- Use the deployed domain as the Google redirect URI.
+
+### Required environment variables
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI`
+- `APP_BASE_URL`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_CURRENCY`
+- `PORT` when your host assigns one
+
+### Google OAuth2 redirect URI
+- Local: `http://localhost:8080/login/oauth2/code/google`
+- Deploy: `https://your-domain.com/login/oauth2/code/google`
+
+### Important note about Vercel
+Vercel is optimized around frontend frameworks and serverless functions. Because PakBzer uses Thymeleaf server-side rendering, the simplest deployment is to host the Spring Boot app as one service rather than splitting frontend and backend.
 
 ## 🗂️ Project Structure
 
