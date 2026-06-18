@@ -28,5 +28,9 @@ gen_log.txt
 # Contains embedded API keys in line-by-line explanations — keep local only
 PakBzer_Complete_Code_Explanation.doc
 
+# Local secret files
+.env
+*.env
+
 ### Temp / generated browser artifacts ###
 report_artifacts/
