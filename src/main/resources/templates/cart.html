@@ -56,6 +56,13 @@
                     </div>
                     <hr/>
 
+                    <div th:if="${stripeEnabled}" class="alert alert-success small py-2">
+                        Stripe checkout is active — you will be redirected to pay securely.
+                    </div>
+                    <div th:unless="${stripeEnabled}" class="alert alert-warning small py-2">
+                        Demo checkout — add Stripe keys to <code>.env</code> and restart the app for real payments.
+                    </div>
+
                     <div sec:authorize="!isAuthenticated()" class="alert alert-warning small">
                         Please <a th:href="@{/login}">sign in</a> to checkout.
                     </div>

@@ -10,6 +10,7 @@ public class StripeProperties {
     private String secretKey;
     private String publishableKey;
     private String currency = "pkr";
+    private String webhookSecret;
 
     public String getSecretKey() {
         return secretKey;
@@ -33,6 +34,20 @@ public class StripeProperties {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public String getWebhookSecret() {
+        return webhookSecret;
+    }
+
+    public void setWebhookSecret(String webhookSecret) {
+        this.webhookSecret = webhookSecret;
+    }
+
+    public boolean isWebhookConfigured() {
+        return webhookSecret != null
+                && !webhookSecret.isBlank()
+                && !webhookSecret.equalsIgnoreCase("whsec_replace_me");
     }
 
     public boolean isConfigured() {

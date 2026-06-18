@@ -1,5 +1,6 @@
 package com.pakbzer.service;
 
+import com.pakbzer.config.DebugLog;
 import com.pakbzer.config.StripeProperties;
 import com.pakbzer.model.CartItem;
 import com.stripe.Stripe;
@@ -37,6 +38,10 @@ public class StripeService {
      */
     public String createCheckoutSession(List<CartItem> items) throws StripeException {
         Stripe.apiKey = properties.getSecretKey();
+        // #region agent log
+        DebugLog.write("STRIPE-B", "StripeService:createCheckoutSession", "Creating session",
+                "{\"currency\":\"" + properties.getCurrency() + "\",\"itemCount\":" + items.size() + "}");
+        // #endregion
 
         SessionCreateParams.Builder builder = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
