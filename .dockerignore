@@ -1,0 +1,12 @@
+.git
+.idea
+.vscode
+target
+data
+*.log
+*.tmp
+*.png
+*.doc
+*.docx
+*.pdf
+*.zip
